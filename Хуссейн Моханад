@@ -1,0 +1,108 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+public class Birthday
+{
+    public string Name { get; set; }
+    public DateTime DateOfBirth { get; set; }
+
+    public Birthday(string name, DateTime dateOfBirth)
+    {
+        Name = name;
+        DateOfBirth = dateOfBirth;
+    }
+
+    public override string ToString()
+    {
+        return $"{Name} - {DateOfBirth.ToShortDateString()}";
+    }
+}
+
+public class BirthdayTracker
+{
+    private List<Birthday> birthdays;
+
+    public BirthdayTracker()
+    {
+        birthdays = new List<Birthday>();
+    }
+
+    public void AddBirthday(string name, DateTime dateOfBirth)
+    {
+        birthdays.Add(new Birthday(name, dateOfBirth));
+    }
+
+    public void RemoveBirthday(string name)
+    {
+        var birthdayToRemove = birthdays.FirstOrDefault(b => b.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (birthdayToRemove != null)
+        {
+            birthdays.Remove(birthdayToRemove);
+        }
+        else
+        {
+            Console.WriteLine($"День рождения {name} не найден.");
+        }
+    }
+
+    public void EditBirthday(string name, DateTime newDateOfBirth)
+    {
+        var birthdayToEdit = birthdays.FirstOrDefault(b => b.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (birthdayToEdit != null)
+        {
+            birthdayToEdit.DateOfBirth = newDateOfBirth;
+        }
+        else
+        {
+            Console.WriteLine($"День рождения {name} не найден.");
+        }
+    }
+
+    public void DisplayAllBirthdays()
+    {
+        foreach (var birthday in birthdays)
+        {
+            Console.WriteLine(birthday);
+        }
+    }
+
+    public void DisplayUpcomingBirthdays(int days)
+    {
+        var upcomingBirthdays = birthdays.Where(b => (b.DateOfBirth - DateTime.Today).Days <= days && (b.DateOfBirth - DateTime.Today).Days >= 0);
+        foreach (var birthday in upcomingBirthdays)
+        {
+            Console.WriteLine(birthday);
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        BirthdayTracker tracker = new BirthdayTracker();
+
+        tracker.AddBirthday("John", new DateTime(1990, 5, 15));
+        tracker.AddBirthday("Alice", new DateTime(1985, 10, 20));
+        tracker.AddBirthday("Bob", new DateTime(1995, 3, 8));
+
+        Console.WriteLine("Список всех дней рождения:");
+        tracker.DisplayAllBirthdays();
+
+        Console.WriteLine("\nБлижайшие дни рождения:");
+        tracker.DisplayUpcomingBirthdays(30);
+
+        Console.WriteLine("\nУдаление дня рождения John:");
+        tracker.RemoveBirthday("John");
+
+        Console.WriteLine("\nСписок всех дней рождения после удаления:");
+        tracker.DisplayAllBirthdays();
+
+        Console.WriteLine("\nРедактирование дня рождения Alice:");
+        tracker.EditBirthday("Alice", new DateTime(1986, 10, 20));
+
+        Console.WriteLine("\nСписок всех дней рождения после редактирования:");
+        tracker.DisplayAllBirthdays();
+    }
+}
