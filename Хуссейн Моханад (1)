@@ -1,0 +1,185 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+
+public class Birthday
+{
+    public string Name { get; set; }
+    public DateTime DateOfBirth { get; set; }
+
+    public Birthday(string name, DateTime dateOfBirth)
+    {
+        Name = name;
+        DateOfBirth = dateOfBirth;
+    }
+
+    public override string ToString()
+    {
+        return $"{Name} - {DateOfBirth.ToShortDateString()}";
+    }
+}
+
+public class BirthdayTracker
+{
+    private List<Birthday> birthdays;
+
+    public BirthdayTracker()
+    {
+        birthdays = new List<Birthday>();
+    }
+
+    public void AddBirthday(string name, DateTime dateOfBirth)
+    {
+        birthdays.Add(new Birthday(name, dateOfBirth));
+    }
+
+    public void RemoveBirthday(string name)
+    {
+        var birthdayToRemove = birthdays.FirstOrDefault(b => b.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (birthdayToRemove != null)
+        {
+            birthdays.Remove(birthdayToRemove);
+        }
+        else
+        {
+            Console.WriteLine($"День рождения {name} не найден.");
+        }
+    }
+
+    public void EditBirthday(string name, DateTime newDateOfBirth)
+    {
+        var birthdayToEdit = birthdays.FirstOrDefault(b => b.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (birthdayToEdit != null)
+        {
+            birthdayToEdit.DateOfBirth = newDateOfBirth;
+        }
+        else
+        {
+            Console.WriteLine($"День рождения {name} не найден.");
+        }
+    }
+
+    public void DisplayAllBirthdays()
+    {
+        foreach (var birthday in birthdays)
+        {
+            Console.WriteLine(birthday);
+        }
+    }
+
+    public void DisplayUpcomingBirthdays(int days)
+    {
+        var upcomingBirthdays = birthdays.Where(b => (b.DateOfBirth - DateTime.Today).Days <= days && (b.DateOfBirth - DateTime.Today).Days >= 0);
+        foreach (var birthday in upcomingBirthdays)
+        {
+            Console.WriteLine(birthday);
+        }
+    }
+
+    public void SaveToFile(string fileName)
+    {
+        using (StreamWriter writer = new StreamWriter(fileName))
+        {
+            foreach (var birthday in birthdays)
+            {
+                writer.WriteLine($"{birthday.Name},{birthday.DateOfBirth}");
+            }
+        }
+    }
+
+    public void LoadFromFile(string fileName)
+    {
+        if (File.Exists(fileName))
+        {
+            birthdays.Clear();
+            using (StreamReader reader = new StreamReader(fileName))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    string[] parts = line.Split(',');
+                    if (parts.Length == 2 && DateTime.TryParse(parts[1], out DateTime dateOfBirth))
+                    {
+                        birthdays.Add(new Birthday(parts[0], dateOfBirth));
+                    }
+                }
+            }
+        }
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        BirthdayTracker tracker = new BirthdayTracker();
+
+        // Проверка наличия файла с данными и загрузка, если файл существует
+        string fileName = "birthdays.txt";
+        if (File.Exists(fileName))
+        {
+            tracker.LoadFromFile(fileName);
+        }
+
+        // Основное меню приложения
+        while (true)
+        {
+            Console.WriteLine("Меню:");
+            Console.WriteLine("1. Отобразить все дни рождения");
+            Console.WriteLine("2. Отобразить ближайшие дни рождения");
+            Console.WriteLine("3. Добавить день рождения");
+            Console.WriteLine("4. Удалить день рождения");
+            Console.WriteLine("5. Редактировать день рождения");
+            Console.WriteLine("6. Сохранить изменения и выйти");
+
+            Console.Write("Выберите действие (1-6): ");
+            string choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "1":
+                    Console.WriteLine("Список всех дней рождения:");
+                    tracker.DisplayAllBirthdays();
+                    break;
+                case "2":
+                    Console.WriteLine("Ближайшие дни рождения:");
+                    tracker.DisplayUpcomingBirthdays(30);
+                    break;
+                case "3":
+                    Console.Write("Введите имя: ");
+                    string name = Console.ReadLine();
+                    Console.Write("Введите дату рождения (гггг-мм-дд): ");
+                    DateTime dateOfBirth;
+                    while (!DateTime.TryParse(Console.ReadLine(), out dateOfBirth))
+                    {
+                        Console.WriteLine("Неверный формат даты. Повторите ввод:");
+                    }
+                    tracker.AddBirthday(name, dateOfBirth);
+                    break;
+                case "4":
+                    Console.Write("Введите имя для удаления: ");
+                    string nameToRemove = Console.ReadLine();
+                    tracker.RemoveBirthday(nameToRemove);
+                    break;
+                case "5":
+                    Console.Write("Введите имя для редактирования: ");
+                    string nameToEdit = Console.ReadLine();
+                    Console.Write("Введите новую дату рождения (гггг-мм-дд): ");
+                    DateTime newDateOfBirth;
+                    while (!DateTime.TryParse(Console.ReadLine(), out newDateOfBirth))
+                    {
+                        Console.WriteLine("Неверный формат даты. Повторите ввод:");
+                    }
+                    tracker.EditBirthday(nameToEdit, newDateOfBirth);
+                    break;
+                case "6":
+                    tracker.SaveToFile(fileName);
+                    return;
+                default:
+                    Console.WriteLine("Неверный выбор. Попробуйте снова.");
+                    break;
+            }
+        }
+    }
+}
